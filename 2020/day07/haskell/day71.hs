@@ -11,9 +11,9 @@ main = interact $ show . pred . sum . map fromEnum
 
 search :: String -> DM.Map String [(Int, String)] -> Bool
 search name di
-    |name == "shinygold" = True
-    |name == "empty" = False
-    |otherwise = or 
+    | name == "shinygold" = True
+    | name == "empty" = False
+    | otherwise = or 
         $ map 
             (\tup -> search (snd tup) di) 
             (di DM.! name)
