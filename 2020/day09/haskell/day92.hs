@@ -17,5 +17,4 @@ sumSlice low offset list
   | (sum s) < target = sumSlice low (offset + 1) list
   | (sum s) > target = sumSlice (low + 1) (offset -1) list
   | otherwise = (minimum s) + (maximum s)
-  where
-    s = slice low offset list
+  where s = slice low offset list
