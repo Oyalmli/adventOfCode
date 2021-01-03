@@ -1,4 +1,5 @@
 *.txt
 .idea
 .vscode
-/inputs/
+inputs/
+testInputs/

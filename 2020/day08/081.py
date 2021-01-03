@@ -1,4 +1,4 @@
-ops = [line.strip() for line in open("../input.txt")]
+ops = [line.strip() for line in open("../inputs/08.txt")]
 ops = [[False, line[:3], line[3:]] for line in ops]
 #print(ops)
 
