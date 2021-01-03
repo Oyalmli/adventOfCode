@@ -5,6 +5,7 @@ def main():
     changed = False
     while(not changed):
         board, c = update(board, height, width)
+        printBoard(board)
         changed = not c
     print(cnt(board))
 
@@ -45,7 +46,12 @@ def check(x,y,board, W, H, dx, dy):
         posx+=dx
         posy+=dy
     return 0
-    
+
+def printBoard(board):
+    for x in board:
+        for y in x:
+            print(y, end='')
+        print()
 
 def makeBoard(path):
     return [[c for c in line.strip()] for line in open(path)]
