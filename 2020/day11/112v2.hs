@@ -28,11 +28,11 @@ update grid (width, height) = if grid == newgrid then grid else update newgrid (
             | y <- [0..(height-1)], x <- [0..(width-1)]] width
 
 getAroundP :: Grid -> Pos -> Bool
-getAroundP grid pos = (>=5) $ length $ filter (=='#') $ map (getDirs grid pos) dirs
+getAroundP grid pos = (>=5) $ sum $ map (getDirs grid 0 pos) dirs
     where dirs = [(1,0),(1,-1),(0,-1),(-1,-1),(-1,0),(-1,1),(0,1),(1,1)]::[Pos]
 
 getAroundL :: Grid -> Pos -> Bool
-getAroundL grid pos = not $ any (=='#') $ map (getDirs grid pos) dirs
+getAroundL grid pos = (>=1) $ sum $ map (getDirs grid 0 pos) dirs
     where dirs = [(1,0),(1,-1),(0,-1),(-1,-1),(-1,0),(-1,1),(0,1),(1,1)]::[Pos]
 
 updateVecs:: String -> Int -> [Vector Char]
@@ -40,12 +40,12 @@ updateVecs [] _ = []
 updateVecs updateString width = (fromList $ take width updateString)
     : updateVecs (drop width updateString) width
 
-getDirs :: Grid -> Pos -> Pos -> Char
-getDirs grid (x,y) (xd, yd) = case getPos grid (x+xd, y+yd) of
-    ' ' -> ' '
-    '#' -> '#'
-    'L' -> 'L'
-    '.' -> getDirs grid (x+xd,y+yd) (xd, yd)
+getDirs :: Grid -> Int -> Pos -> Pos -> Int
+getDirs grid n (x,y) (xd, yd) = case getPos grid (x+xd, y+yd) of
+    ' ' -> 0
+    '#' -> 1
+    'L' -> 1
+    '.' -> getDirs grid n (x+xd,y+yd) (xd, yd)
     _ -> error "oopies"
 
 getPos :: Grid -> Pos -> Char

@@ -1,11 +1,11 @@
 def main():
-    board = makeBoard("../input.txt")
+    board = makeBoard("../inputs/11.txt")
     height = len(board)
     width = len(board[0])
     changed = False
     while(not changed):
         board, c = update(board, height, width)
-        printBoard(board)
+        #printBoard(board)
         changed = not c
     print(cnt(board))
 
