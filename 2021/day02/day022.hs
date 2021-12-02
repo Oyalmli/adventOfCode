@@ -7,10 +7,10 @@ main = interact
   . lines
 
 solve :: [String] -> (Int, Int, Int) ->  Int
-solve []       (hori, depth, aim) = hori * depth
-solve (l : ls) (hori, depth, aim) = solve ls 
+solve []       (hor, dpt, aim) = hor * dpt
+solve (l : ls) (hor, dpt, aim) = solve ls 
   ( case dir of
-    "forward" -> (hori+n, depth + n*aim, aim    )
-    "down"    -> (hori  , depth        , aim + n)
-    "up"      -> (hori  , depth        , aim - n) )
+    "forward" -> (hor+n, dpt + n*aim, aim  )
+    "down"    -> (hor  , dpt        , aim+n)
+    "up"      -> (hor  , dpt        , aim-n) )
   where [dir, sn] = words l; n = read sn
