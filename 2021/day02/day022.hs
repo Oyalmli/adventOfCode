@@ -3,7 +3,7 @@ module Main where
 main :: IO ()
 main = interact
   $ show
-  . (\(hor, dep,_) -> hor * dep)
+  . (\(hor, dep, _) -> hor * dep)
   . foldl solve (0, 0, 0)
   . lines
 
