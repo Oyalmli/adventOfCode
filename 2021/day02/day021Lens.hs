@@ -1,6 +1,6 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Main where
-import Control.Lens
+import Control.Lens ( (&), (+~), (-~), makeLenses )
 
 data Sub = Sub {
   _hor :: Int,
@@ -11,14 +11,16 @@ makeLenses ''Sub
 main :: IO ()
 main = interact
   $ show
-  . flip solve (Sub {_hor=0, _dpt=0})
+  . ((*) . _hor <*> _dpt)
+  . foldl solve (Sub {_hor=0, _dpt=0})
   . lines
 
-solve :: [String] -> Sub -> Int
-solve []       sub   = _hor sub * _dpt sub
-solve (l : ls) sub   = solve ls 
-  ( case dir of
+solve :: Sub -> String ->  Sub
+solve sub l = 
+  case dir of
     "forward" -> sub &hor +~ n
     "down"    -> sub &dpt +~ n
-    "up"      -> sub &dpt -~ n )
-  where [dir, sn] = words l; n = read sn
+    "up"      -> sub &dpt -~ n
+  where 
+    [dir, sn] = words l
+    n = read sn
