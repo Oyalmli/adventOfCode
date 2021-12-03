@@ -4,11 +4,9 @@ import Data.Char ( digitToInt )
 
 main :: IO ()
 main = interact 
-    $ show
-    . uncurry (*)
+    $ show . uncurry (*)
     . (\ls -> (bintodec $ solve 0 0 ls, bintodec $ solve 1 0 ls))
-    . map (map digitToInt)
-    . lines
+    . map (map digitToInt) . lines
 
 solve :: Int -> Int -> [[Int]] -> [Int]
 solve _ _ [x] = x
