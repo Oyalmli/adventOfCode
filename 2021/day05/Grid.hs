@@ -11,42 +11,44 @@ module Grid
 where
 
 import Prelude hiding (replicate)
-import qualified Data.List.Split as S
-import qualified Data.Vector as V
+import qualified Data.List.Split as Split
+import qualified Data.Sequence as S
+import qualified Data.Foldable as F
 
-type Grid a = V.Vector (V.Vector a)
+type Grid a = S.Seq (S.Seq a)
 
 -- |Creates a grid with a given width (not given that it is even)
 fromList :: Int -> [a] -> Grid a
-fromList w = V.fromList . Prelude.map V.fromList . S.chunksOf w
+fromList w = S.fromList . Prelude.map S.fromList . Split.chunksOf w
 
 toList :: Grid a -> [[a]]
-toList grid = map V.toList (V.toList grid) 
+toList grid = map F.toList (F.toList grid) 
 
-inGrid :: V.Vector (V.Vector a) -> Int -> Int -> Bool 
-inGrid grid r c = 0 <= r && r < V.length grid && 0 <=c && c < V.length (grid V.! r) 
+inGrid :: S.Seq (S.Seq a) -> Int -> Int -> Bool 
+inGrid grid r c = 0 <= r && r < S.length grid && 0 <=c && c < S.length (S.index grid r) 
 
 -- |Creates an empty grid
 empty :: Grid a
-empty = V.singleton V.empty
+empty = S.singleton S.empty
 
 -- |Generates a Grid initialized with value a
 replicate :: Int -> Int -> a -> Grid a
-replicate r c a = V.replicate r (V.replicate c a)
+replicate r c a = S.replicate r (S.replicate c a)
 
 -- |Unsafe get val at row column
 (!) :: Grid a -> Int -> Int -> a
-(!) grid r c = (grid V.! r) V.! c
+(!) grid r = S.index (S.index grid r)
 
 -- |Safe get val at row column
 (!?) :: Grid a -> Int -> Int -> Maybe a
-(!?) grid r c = case grid V.!? r of
+(!?) grid r c = case grid S.!? r of
   Nothing -> Nothing
-  Just row -> row V.!? c
+  Just row -> row S.!? c
 
 -- |unsafe set value at row column
 (><) :: Grid a -> Int -> Int -> a -> Grid a
-(><) grid r c a = V.unsafeUpd grid [(r, V.unsafeUpd (grid V.! r) [(c, a)])]
+--(><) grid r c a = S.unsafeUpd grid [(r, V.unsafeUpd (grid V.! r) [(c, a)])]
+(><) grid r c a = S.update r (S.update c a (S.index grid r)) grid
 
 -- |Takes a grid.
 -- Returns the 4-neighbors of:
@@ -66,8 +68,8 @@ replicate r c a = V.replicate r (V.replicate c a)
     (\(dy, dx) -> (!?) grid (r + dy) (c + dx))
     [(-1, 0), (-1, 1), (0, 1), (1, 1), (1, 0), (1, -1), (0, -1), (-1, -1)]
 
-getRow :: Grid a -> Int -> V.Vector a
-getRow grid r = grid V.! r
+getRow :: Grid a -> Int -> S.Seq a
+getRow = S.index
 
-getCol :: Grid a -> Int -> V.Vector a
-getCol grid c = V.map (V.! c) grid
+getCol :: Grid a -> Int -> S.Seq a
+getCol grid c = (`S.index` c) grid
