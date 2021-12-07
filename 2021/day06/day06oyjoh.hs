@@ -15,11 +15,11 @@ main = do
   mapM_ (print . F.sum . solve inp) [80, 256]
 
 solve :: [Int] -> Int -> S.Seq Int
-solve dat days = foldl g (foldl f table dat) (genIdx days)
+solve dat days = foldl g (foldl f table dat) (genIdx (days+1))
   where
     table = S.replicate 9 0
     f hist i = S.update i (S.index hist i + 1) hist
     g hist i = S.update i (S.index hist i + S.index hist ((i + 2) `mod` 9)) hist
 
 genIdx :: Int -> [Int]
-genIdx n = take (n + 1) $ iterate (\i -> (i + 1) `mod` 9) 6
+genIdx = ($ iterate ((`mod` 9) . (1 +)) 6) . take
