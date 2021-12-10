@@ -14,6 +14,7 @@ import Prelude hiding (replicate)
 import qualified Data.List.Split as Split
 import qualified Data.Sequence as S
 import qualified Data.Foldable as F
+import Data.Maybe ( isJust ,mapMaybe, fromJust )
 
 type Grid a = S.Seq (S.Seq a)
 
@@ -62,11 +63,11 @@ replicate r c a = S.replicate r (S.replicate c a)
     (\(dy, dx) -> (!?) grid (r + dy) (c + dx))
     [(-1, 0), (0, 1), (1, 0), (0, -1)]
 
-(?++) :: Grid a -> Int -> Int -> [((Int,Int), Maybe a)]
-(?++) grid r c =
-  Prelude.map
-    (\(dy, dx) -> ((dx,dy), (!?) grid (r + dy) (c + dx)))
-    [(-1, 0), (0, 1), (1, 0), (0, -1)]
+(?++) :: Grid a -> Int -> Int -> [((Int,Int), a)]
+(?++) grid r c = concatMap
+  ((\ (a, mb) -> ([(a, fromJust mb) | isJust mb]))
+     . (\ (dy, dx) -> ((r + dy,  c + dx), (!?) grid (r + dy) (c + dx))))
+  [(-1, 0), (0, 1), (1, 0), (0, -1)]
 
 -- |Takes a grid.
 -- Returns the 8-neighbors of:

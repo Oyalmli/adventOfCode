@@ -7,16 +7,17 @@ low_points_short = [(0,1),(2,2),(4,6),(0,9)]
 def main():
     grid = [[int(x) for x in line.strip()] for line in sys.stdin.readlines()]
     ns = []
-    visited = set()
     for p in low_points:
-        ns.append(goTo(visited, grid, p))    
-    print(prod(list(sorted(ns, reverse=True))[:3]))
+        visited = set()
+        ns.append(goTo(visited, grid, [p]))    
+    print(prod(list(sorted(ns, reverse=True)))[:3])
 
 def inGrid(grid, point):
     y,x = point
     return 0 <= x < len(grid[0]) and 0 <= y < len(grid)
 
-def goTo(visited, grid, point):
+def goTo(visited, grid, q):
+    point = q.pop()
     if point in visited: return 0
     visited.add(point)
     y,x = point
