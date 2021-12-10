@@ -7,8 +7,7 @@ main :: IO ()
 main = interact
     $ show . sum
     . map getVal
-    . filter (not . null) 
-    . map (solve [])
+    . concatMap (solve [])
     . lines 
 
 solve :: String -> String -> [Char]
@@ -18,8 +17,8 @@ solve stc (c:cs)
     | closer (head stc) c = solve (tail stc) cs
     | otherwise = [c]
 
-getVal :: String -> Int
-getVal = (!) $ fromList [(")", 3), ("]", 57), ("}", 1197), (">", 25137)]
+getVal :: Char -> Int
+getVal = (!) $ fromList [(')', 3), (']', 57), ('}', 1197), ('>', 25137)]
 
 closer :: Char -> Char -> Bool
 closer = (!) $ fromList [('(', (== ')')), ('[',(== ']')), ('<',(== '>')), ('{',(== '}'))]
