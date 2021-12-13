@@ -3,65 +3,59 @@ import sys
 def readPoints(lines):
     points = []
     for idx, line in enumerate(lines):
-        if line == '': break
-        a,b = map(int, line.split(","))
-        points.append((a,b))
+        if line == '':
+            break
+        a, b = map(int, line.split(","))
+        points.append((a, b))
     return points, lines[idx+1:]
 
 def readCommands(lines):
     commands = []
     for line in lines:
-        _, _, command = line.split() 
+        _, _, command = line.split()
         d, pos = command.split("=")
         commands.append((d, int(pos)))
     return commands
 
 def foldX(point, at):
-    x,y = point
+    x, y = point
     return (at - abs(at - x), y)
 
 def foldY(point, at):
-    x,y = point
+    x, y = point
     return (x, at - abs(at - y))
 
-
 def printPaper(points):
-    w,h = wh(points)
-
+    w, h = wh(points)
     grid = [[' ' for _ in range(w+1)] for _ in range(h+1)]
-    for x,y in points:
-        grid[y][x] = u"\u2588"
-    
+    for x, y in points:
+        grid[y][x] = "█"
     print('\n'.join([''.join(line) for line in grid]))
 
-
 def wh(points):
-    maxX = 0
-    maxY = 0
-    for x,y in points:
-        if x > maxX: maxX = x
-        if y > maxY: maxY = y
+    maxX, _ = max(points, key=lambda t: t[0])
+    _, maxY = max(points, key=lambda t: t[1])
     return maxX, maxY
 
+def doStep(direction, pos, points):
+    return set(map(lambda point: foldY(point, pos) if direction == "y" else foldX(point, pos), points))
 
 def main():
     inp = [line.strip() for line in sys.stdin.readlines()]
     points, restInp = readPoints(inp)
     points = set(points)
     commands = readCommands(restInp)
-    showP1 = True
+
+    # Part 1
+    direction, pos = commands[0]
+    print("Part 1:", len(doStep(direction, pos, points)), "\n")
+    
+    # Part 2
     for direction, pos in commands:
-        if direction == "y":
-            points = set(map(lambda point: foldY(point, pos), points))
-        elif direction == "x":
-            points = set(map(lambda point: foldX(point, pos), points))
-        if showP1:
-            showP1 = False
-            print("Part 1:", len(points), "\n")
-    
-    print("Part 2:\n")
+        points = doStep(direction, pos, points)
+    print("Part 2:")
     printPaper(points)
-    
+
 
 if __name__ == "__main__":
     main()
