@@ -23,7 +23,7 @@ def solve(n, ruleMap, pHist):
             npHist[(a,b)] -= v
             npHist[(a,c)] += v
             npHist[(c,b)] += v
-        pHist = npHist.copy()
+        pHist = npHist
     return countChars(pHist)
 
 def main():
