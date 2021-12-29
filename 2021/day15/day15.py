@@ -4,9 +4,6 @@ import heapq as hq
 INT_MAX = sys.maxsize
 deltas = [(0,-1),(1,0),(0,1),(-1,0)]
 
-def inGrid(x, y, grid):
-    return 0 <= x < len(grid[0]) and 0 <= y < len(grid)
-
 def minCost(cost, m, n):
     dp = [[INT_MAX for _ in range(n+1)] for _ in range(m+1)]
     visited = [[False for _ in range(n+1)] for _ in range(m+1)]
@@ -20,16 +17,10 @@ def minCost(cost, m, n):
         visited[x][y] = True
         for (dx,dy) in deltas:
             next_x, next_y = x + dx, y + dy
-            if inGrid(next_x, next_y, cost) and not visited[next_x][next_y]:
+            if 0 <= next_x < len(cost[0]) and 0 <= next_y < len(cost) and not visited[next_x][next_y]:
                 dp[next_x][next_y] = min(dp[next_x][next_y], dp[x][y] + cost[next_x][next_y])
                 hq.heappush(pq,(dp[next_x][next_y], next_x, next_y))
     return dp[m][n]
-
-def printGrid(grid):
-    for row in grid:
-        for cell in row:
-            print(f"{cell}", end="")
-        print()
 
 def transformGrid(grid):
     h = len(grid)
