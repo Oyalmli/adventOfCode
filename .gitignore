@@ -1,6 +1,11 @@
 *.txt
+*.class
+*.tasty
 .idea
 .vscode
 inputs/
 testInputs/
 trash/
+build/
+cmake-build/
+build-cmake/
