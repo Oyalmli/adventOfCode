@@ -1,23 +1,23 @@
 module Grid where
 
 import Data.Foldable qualified as F
-import Data.Sequence qualified as S
+import Data.Vector qualified as V
 
-type Grid a = S.Seq (S.Seq a)
+type Grid a = V.Vector (V.Vector a)
 
 dims :: Grid a -> (Int, Int)
-dims = (,) <$> S.length <*> S.length
+dims = (,) <$> V.length <*> V.length
 
 fromList :: [[a]] -> Grid a
-fromList = S.fromList . map S.fromList
+fromList = V.fromList . map V.fromList
 
 toList :: Grid a -> [[a]]
 toList = map F.toList . F.toList
 
 (!) :: Int -> Int -> Grid a -> a
-(!) x y g = g `S.index` y `S.index` x
+(!) x y g = g V.! y V.! x
 
 (!?) :: Int -> Int -> Grid a -> Maybe a
 (!?) x y g = do
-  row <- g S.!? y
-  row S.!? x
+  row <- g V.!? y
+  row V.!? x
