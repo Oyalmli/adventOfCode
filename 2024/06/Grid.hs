@@ -1,29 +1,37 @@
 module Grid where
 
-import Data.Foldable qualified as F
-import Data.Vector qualified as V
-
-import Data.Vector qualified as V
 import Data.Vector.Unboxed qualified as VU
 
-type Grid a = V.Vector (VU.Vector a)
+data Grid a = Grid
+  { width :: Int,
+    height :: Int,
+    arr :: VU.Vector a
+  }
+  deriving (Show)
+
+fromList :: (VU.Unbox a) => [[a]] -> Grid a
+fromList [] = Grid 0 0 VU.empty
+fromList rows@(x : xs) = Grid w h (VU.fromList (concat rows))
+  where
+    h = length rows
+    w = if h == 0 then 0 else length x
+
+toList :: (VU.Unbox a) => Grid a -> [[a]]
+toList (Grid w _ vec) =
+  [VU.toList $ VU.slice (i * w) w vec | i <- [0 .. (VU.length vec `div` w - 1)]]
 
 dims :: Grid a -> (Int, Int)
-dims = (,) <$> V.length <*> V.length
+dims (Grid w h _) = (w, h)
 
-fromList :: [[Char]] -> Grid Char
-fromList = V.fromList . map VU.fromList
+(!) :: (VU.Unbox a) => Int -> Int -> Grid a -> a
+(!) x y (Grid w _ vec) = vec VU.! (y * w + x)
 
-toList :: Grid Char -> [[Char]]
-toList = map VU.toList . V.toList
+(!?) :: (VU.Unbox a) => Int -> Int -> Grid a -> Maybe a
+(!?) x y (Grid w h vec)
+  | x < 0 || x >= w || y < 0 || y >= h = Nothing
+  | otherwise = Just $ vec VU.! (y * w + x)
 
-(><) :: Int -> Int -> Grid Char -> Char -> Grid Char
-(><) x y g c = g V.// [(y, (g V.! y) VU.// [(x, c)])]
-
-(!) :: Int -> Int -> Grid Char -> Char
-(!) x y g = g V.! y VU.! x
-
-(!?) :: Int -> Int -> Grid Char -> Maybe Char
-(!?) x y g = do
-  row <- g V.!? y
-  row VU.!? x
+(><) :: (VU.Unbox a) => Int -> Int -> Grid a -> a -> Grid a
+(><) x y (Grid w h vec) newVal = Grid w h (vec VU.// [(idx, newVal)])
+  where
+    idx = y * w + x

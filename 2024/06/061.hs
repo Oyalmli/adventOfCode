@@ -10,7 +10,7 @@ main = do
   let Just (x, y) = findLocation (== '^') grid
   print grid
   print (x, y)
-  print $ walk (x, y) (0, -1) grid
+  let path = walk (x, y) (0, -1) grid
   print $ (+1) $ S.length $ S.fromList $ walk (x, y) (0, -1) grid
 
 step :: (Int, Int) -> (Int, Int) -> Grid Char -> ((Int, Int), Char)

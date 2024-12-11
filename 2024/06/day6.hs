@@ -1,86 +1,58 @@
-{-# LANGUAGE InstanceSigs #-}
-
+--- Day 6: Guard Gallivant ---
+import Data.Foldable qualified as F
 import Data.HashSet qualified as S
-import Data.Hashable
-import Data.List (transpose)
-import Data.Vector qualified as V
-
-data Fin = Count Int | Loop deriving (Show, Eq)
-data Dir = U | D | L | R deriving (Show, Eq, Ord, Enum)
-
-instance Hashable Dir where
-  hashWithSalt :: Int -> Dir -> Int
-  hashWithSalt = hashUsing fromEnum
-
-type TreePosGrid = V.Vector [Int]
-type PlayerData = (Int, Int, Dir)
+import Data.Maybe (isNothing)
+import Grid
 
 main :: IO ()
 main = do
   inp <- getContents
-  let ls = lines inp
-  let (px, py) = findPlayerLocation ls
-  let udTree = makeTreePosGrid ls
-  let lrTree = makeTreePosGrid (transpose ls)
-  let grids = 
-  print $ solve 0 S.empty (px, py, U) (udTree, lrTree)
+  let grid = fromList (lines inp)
+  let Just (x, y) = findLocation (== '^') grid
+  let path = S.fromList $ walk (x, y) (0, -1) grid
+  putStrLn $ "Part 1: " ++ show ((+ 1) $ F.length path)
+  putStrLn $ "Part 2: " ++ show ((+ 1) $ length $ filter (not . id) $ map (walkLoop S.empty (x, y) (0, -1)) (map (disrupt grid) $ S.toList path))
 
-solve :: Int -> S.HashSet PlayerData -> PlayerData -> (TreePosGrid, TreePosGrid) -> Fin
-solve count visited pPos@(px, py, pdir) treePos =
-  if S.member pPos visited
-    then Loop
-    else case findCollision pPos treePos of
-      Just (x, y) ->
-        let steps = abs (px - x) + abs (py - y)
-        in solve (count + steps) (S.insert pPos visited) (x, y, rotateRight pdir) treePos
-      Nothing -> Count count
+disrupt :: Grid Char -> (Int, Int) -> Grid Char
+disrupt grid (x, y) = (><) x y grid '#'
 
-rotateRight :: Dir -> Dir
-rotateRight U = R
-rotateRight R = D
-rotateRight D = L
-rotateRight L = U
+step :: (Int, Int) -> (Int, Int) -> Grid Char -> ((Int, Int), Char)
+step (x, y) (dx, dy) grid = ((x + dx, y + dy), nextChar)
+  where
+    (x', y') = (x + dx, y + dy)
+    nextChar = case (!?) x' y' grid of
+      Just c -> c
+      Nothing -> 'X'
 
-findCollision :: PlayerData -> (TreePosGrid, TreePosGrid) -> Maybe (Int, Int)
-findCollision (x, y, dir) (lr_treePos, ud_treePos) = case dir of
-  U -> vertCheck (x, y) dir ud_treePos
-  D -> vertCheck (x, y) dir ud_treePos
-  L -> horizCheck (x, y) dir lr_treePos
-  R -> horizCheck (x, y) dir lr_treePos
+walk :: (Int, Int) -> (Int, Int) -> Grid Char -> [(Int, Int)]
+walk pos dir grid = case nextChar of
+  '.' -> pos : walk nextPos dir grid
+  '^' -> pos : walk nextPos dir grid
+  '#' -> pos : walk pos (rotateRight dir) grid
+  'X' -> []
+  where
+    (nextPos, nextChar) = step pos dir grid
 
-horizCheck :: (Int, Int) -> Dir -> TreePosGrid -> Maybe (Int, Int)
-horizCheck (x, y) dir ud_treePos =
-  let row = ud_treePos V.! y
-  in case dir of
-    R -> let treesRight = filter (> x) row
-         in if null treesRight then Nothing else Just (minimum treesRight - 1, y)
-    L -> let treesLeft = filter (< x) row
-         in if null treesLeft then Nothing else Just (maximum treesLeft + 1, y)
-    _ -> Nothing
+walkLoop :: S.HashSet ((Int, Int), (Int, Int)) -> (Int, Int) -> (Int, Int) -> Grid Char -> Bool
+walkLoop been pos dir grid
+  | S.member (pos, dir) been = False
+  | otherwise = case nextChar of
+      '.' -> walkLoop been nextPos dir grid
+      '^' -> walkLoop been nextPos dir grid
+      '#' -> walkLoop (S.insert (pos, dir) been) pos (rotateRight dir) grid
+      'X' -> True
+  where
+    (nextPos, nextChar) = step pos dir grid
 
-vertCheck :: (Int, Int) -> Dir -> TreePosGrid -> Maybe (Int, Int)
-vertCheck (x, y) dir lr_treePos =
-  let col = lr_treePos V.! x
-  in case dir of
-    U -> let treesAbove = filter (< y) col
-         in if null treesAbove then Nothing else Just (x, maximum treesAbove + 1)
-    D -> let treesBelow = filter (> y) col
-         in if null treesBelow then Nothing else Just (x, minimum treesBelow - 1)
-    _ -> Nothing
+rotateRight :: (Int, Int) -> (Int, Int)
+rotateRight (x, y) = (-y, x)
 
-
-makeTreePosGrid :: [String] -> TreePosGrid
-makeTreePosGrid ls =
-  V.fromList
-    [ [idx | (c, idx) <- zip line [0 ..], isTree c]
-    | line <- ls
-    ]
-
-isTree :: Char -> Bool
-isTree = (== '#')
-
-isPlayer :: Char -> Bool
-isPlayer = (== '^')
-
-findPlayerLocation :: [String] -> (Int, Int)
-findPlayerLocation ls = head [(x, y) | (y, line) <- zip [0 ..] ls, (x, c) <- zip [0 ..] line, isPlayer c]
+findLocation :: (Char -> Bool) -> Grid Char -> Maybe (Int, Int)
+findLocation target grid = go 0 0
+  where
+    (w, h) = dims grid
+    go x y
+      | y == h = Nothing
+      | x == w = go 0 (y + 1)
+      | target ((!) x y grid) = Just (x, y)
+      | otherwise = go (x + 1) y
