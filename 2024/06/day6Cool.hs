@@ -1,12 +1,11 @@
 import Data.Foldable (find)
+import Data.Foldable qualified as F
 import Data.HashSet qualified as HS
 import Data.List (transpose)
 import Data.Vector qualified as V
-import GHC.Generics (Generic)
-import Data.Foldable qualified as F
 
 data Dir = U | D | L | R
-  deriving (Generic)
+  deriving (Ord, Eq, Enum)
 
 type SimpleGrid a = V.Vector [a]
 
@@ -23,56 +22,51 @@ main = do
   let inverseGrid = makeInverseGrid inp
   let loc = findLocation inp
   print loc
-  putStrLn $ "g : " ++ show grid
-  putStrLn $ "g': " ++ show inverseGrid
-
-
   let grid_1 = fromList (lines inp)
   let path = HS.fromList $ walk_1 loc (0, -1) grid_1
-  print $ length $ filter (id) $ map (\grids -> walk grids HS.empty loc U) $ makeGridVariants (grid, inverseGrid) (HS.toList path)
-  putStrLn $ unlines $ map show $ makeGridVariants (grid, inverseGrid) (HS.toList path)
-  print $ walk (grid, inverseGrid) HS.empty loc U
+  print $ (+1) $ length $ filter (id) $ map (\grids -> walk grids HS.empty loc U) $ makeGridVariants (grid, inverseGrid) (HS.toList path)
 
-makeGridVariants :: (SimpleGrid Int, SimpleGrid Int) -> [(Int,Int)] -> [(SimpleGrid Int, SimpleGrid Int)]
+makeGridVariants :: (SimpleGrid Int, SimpleGrid Int) -> [(Int, Int)] -> [(SimpleGrid Int, SimpleGrid Int)]
 makeGridVariants (grid, inverseGrid) disruptions = map (applyDisruptions (grid, inverseGrid)) disruptions
 
 applyDisruptions :: (SimpleGrid Int, SimpleGrid Int) -> (Int, Int) -> (SimpleGrid Int, SimpleGrid Int)
 applyDisruptions (grid, inverseGrid) (x, y) = (grid', inverseGrid')
-  where 
+  where
     grid' = grid V.// [(y, insert x (grid V.! y))]
     inverseGrid' = inverseGrid V.// [(x, insert y (inverseGrid V.! x))]
 
-insert :: Int -> [Int]  -> [Int]
+insert :: Int -> [Int] -> [Int]
 insert elem [] = [elem]
-insert elem (x:xs)
+insert elem (x : xs)
   | elem == x = x : xs
   | elem < x = elem : x : xs
   | otherwise = x : insert elem xs
 
-walk :: (SimpleGrid Int, SimpleGrid Int) -> HS.HashSet (Int, Int) -> (Int, Int) -> Dir -> Bool
+walk :: (SimpleGrid Int, SimpleGrid Int) -> HS.HashSet (Int, Int, Int) -> (Int, Int) -> Dir -> Bool
 walk (g, g') set (x, y) U = case takeWhile (< y) ((V.!) g' x) of
   [] -> False
   ls -> do
-    let y' = last ls
-    walk (g, g') (HS.insert (x, y) set) (x, y' + 1) (rotateRight U)
+    if HS.member (x, y, fromEnum U) set
+      then True
+      else walk (g, g') (HS.insert (x, y, fromEnum U) set) (x, last ls + 1) (rotateRight U)
 walk (g, g') set (x, y) D = case dropWhile (< y) ((V.!) g' x) of
   [] -> False
   (y' : _) -> do
-    if HS.member (x, y) set
+    if HS.member (x, y, fromEnum D) set
       then True
-      else walk (g, g') (HS.insert (x, y) set) (x, y' - 1) (rotateRight D)
+      else walk (g, g') (HS.insert (x, y, fromEnum D) set) (x, y' - 1) (rotateRight D)
 walk (g, g') set (x, y) L = case takeWhile (< x) ((V.!) g y) of
   [] -> False
   ls -> do
-    if HS.member (x, y) set
+    if HS.member (x, y, fromEnum L) set
       then True
-      else walk (g, g') (HS.insert (x, y) set) (last ls + 1, y) (rotateRight L)
+      else walk (g, g') (HS.insert (x, y, fromEnum L) set) (last ls + 1, y) (rotateRight L)
 walk (g, g') set (x, y) R = case dropWhile (< x) ((V.!) g y) of
   [] -> False
   (x' : _) -> do
-    if HS.member (x, y) set
+    if HS.member (x, y, fromEnum R) set
       then True
-      else walk (g, g') (HS.insert (x, y) set) (x' - 1, y) (rotateRight R)
+      else walk (g, g') (HS.insert (x, y, fromEnum R) set) (x' - 1, y) (rotateRight R)
 
 rotateRight :: Dir -> Dir
 rotateRight U = R
@@ -102,7 +96,6 @@ findLocation inp = loc
   where
     Just [loc] = find (not . null) [[(x, y) | (c, x) <- zip line [0 ..], c == '^'] | (line, y) <- zip (lines inp) [0 ..]]
 
-
 step :: (Int, Int) -> (Int, Int) -> Grid Char -> ((Int, Int), Char)
 step (x, y) (dx, dy) grid = ((x + dx, y + dy), nextChar)
   where
@@ -111,7 +104,7 @@ step (x, y) (dx, dy) grid = ((x + dx, y + dy), nextChar)
       Just c -> c
       Nothing -> 'X'
 
---walk :: (Int, Int) -> (Int, Int) -> Grid Char -> [Char]
+-- walk :: (Int, Int) -> (Int, Int) -> Grid Char -> [Char]
 walk_1 :: (Int, Int) -> (Int, Int) -> Grid Char -> [(Int, Int)]
 walk_1 pos dir grid = case nextChar of
   '.' -> pos : walk_1 nextPos dir grid
