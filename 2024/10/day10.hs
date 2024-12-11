@@ -1,5 +1,5 @@
 --- Day 10: Hoof It ---
-import Data.Set qualified as S
+import Data.HashSet qualified as S
 import Grid
 
 main :: IO ()
@@ -16,9 +16,9 @@ main = do
   putStrLn $ "Part 2: " ++ show (sum $ map length paths)
 
 walk :: Grid Char -> Char -> (Int, Int) -> [(Int, Int)]
-walk grid curr (x, y)
-  | (!) x y grid == '9' = [(x, y)]
-  | otherwise = concatMap (walk grid (succ curr))
-        [ (x', y') | (x', y') <- (|-) grid (x, y)
-        , curr == pred ((!) x' y' grid)
-        ]
+walk grid '9' (x, y) = [(x, y)]
+walk grid chr (x, y) = concatMap (walk grid next)
+  [ (x', y') 
+  | (x', y') <- (|-) grid (x, y)
+  , next == ((!) x' y' grid)
+  ] where next = succ chr
